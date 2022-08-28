@@ -1,5 +1,5 @@
 import numpy as np
-
+from replay_buffers.Trajectory import Trajectory
 
 class metrics:
     def __init__(self, env, policy):
@@ -12,11 +12,12 @@ class metrics:
             state = self.env.reset()
             ep_return = 0
             done = False
+            traj = Trajectory(state, None, None, None, False)
             while not done:
-                action = self.policy(state)
-                next_state, reward, done, _ = self.env.step(action)
+                action = self.policy(traj)
+                next_state, reward, done, _, _ = self.env.step(action)
+                traj = Trajectory(state, action, reward, next_state, done)
                 ep_return += reward
-                state = next_state
             returns.append(ep_return)
         return np.mean(returns)
 
@@ -26,9 +27,11 @@ class metrics:
             state = self.env.reset()
             ep_length = 0
             done = False
+            traj = Trajectory(state, None, None, None, False)
             while not done:
-                action = self.policy(state)
-                next_state, reward, done, _ = self.env.step(action)
+                action = self.policy(traj)
+                next_state, reward, done, _, _ = self.env.step(action)
+                traj = Trajectory(state, action, reward, next_state, done)
                 ep_length += 1
                 state = next_state
             all_lengths.append(ep_length)

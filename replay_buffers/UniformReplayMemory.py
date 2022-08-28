@@ -20,9 +20,10 @@ class ReplayMemory:
 
     def sample_experience(self, use_priority=None):
         if use_priority:
-            return random.sample(self.memory, self.batch_size)
-        else:
             assert False, "Have not implemented priority sampling yet"
+        else:
+            return random.sample(self.memory, self.batch_size)
+
 
     def clear_experiences(self):
         self.memory = []
