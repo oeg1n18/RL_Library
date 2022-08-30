@@ -27,6 +27,9 @@ class ReplayMemory:
             else:
                 return random.sample(self.memory, self.index)
 
+    def sample_all_episodes(self):
+        return self.memory
+
     def clear_experiences(self):
         self.memory = []
         self.index = 0

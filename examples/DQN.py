@@ -1,7 +1,7 @@
-from Networks.Qnet import CreateQNetwork
+from Networks.QNet import CreateQNetwork
 from agents.DQNAgent import DQNAgent
 from replay_buffers.UniformReplayMemory import ReplayMemory
-from drivers.driver import driver
+from drivers.value_driver import driver
 from replay_buffers.Utils import get_data_spec
 import gym
 from observers.metrics import AverageReturnObserver
