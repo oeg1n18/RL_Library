@@ -8,7 +8,7 @@ def get_data_spec(env, priority=None):
         action = np.random.randint(env.action_space.n)
     else:
         "Implement method to sample non-discrete action"
-    next_state, reward, done, _, _ = env.step(action)
+    next_state, reward, done, _ = env.step(action)
     specs = {"state": [type(state), np.shape(state)],
              "action": [type(action), np.shape(action)],
              "reward": [type(reward), np.shape(reward)],

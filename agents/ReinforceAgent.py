@@ -12,25 +12,24 @@ class Reinforce_base:
     def prepare_returns(self, experiences):
         discounted_returns = np.zeros(len(experiences))
         for index, trajectory in enumerate(experiences):
-            future_df = self.df
             discounted_return = 0
-
             for future_index_step, future_trajectory in enumerate(experiences[index:]):
-                discounted_return += self.df ** future_index_step * future_trajectory.reward
+                discounted_return += (self.df ** future_index_step) * future_trajectory.reward
                 if future_trajectory.done:
                     discounted_returns[index] = discounted_return
                     break
         mean = discounted_returns.mean()
         std = discounted_returns.std()
-        return [((G - mean) / std) for G in discounted_returns]
+        final_returns = [((G - mean) / std) for G in discounted_returns]
+        return list(final_returns)
 
 
 class ReinforceAgent(Reinforce_base):
-    def __init__(self, policynet, learning_rate=0.01, discount_factor=0.95):
+    def __init__(self, policynet, learning_rate=0.05, discount_factor=0.95):
         super().__init__(discount_factor)
         self.policynet = policynet
         self.loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-        self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+        self.optimizer = keras.optimizers.Nadam(learning_rate=learning_rate)
 
     def policy(self, trajectory):
         logits = self.policynet(np.expand_dims(trajectory.state, axis=0)).numpy()
@@ -55,6 +54,7 @@ class ReinforceAgent(Reinforce_base):
                                          for step, final_return in enumerate(all_returns)], axis=0)
             all_mean_grads.append(mean_grads)
         self.optimizer.apply_gradients(zip(all_mean_grads, self.policynet.trainable_variables))
+
     def save(self, dir):
         self.policynet.save(dir)
 

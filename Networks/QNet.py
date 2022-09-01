@@ -1,6 +1,7 @@
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import RMSprop
+
 
 
 def CreateQNetwork(observation_space, action_space, fc_layers):
@@ -10,5 +11,5 @@ def CreateQNetwork(observation_space, action_space, fc_layers):
         for layer in fc_layers[1:]:
             Qnet.add(Dense(layer, kernel_initializer=keras.initializers.GlorotUniform(), activation="elu"))
     Qnet.add(Dense(action_space.n, kernel_initializer=keras.initializers.GlorotUniform(), activation="linear"))
-    Qnet.compile(loss="mse", optimizer=RMSprop())
+    Qnet.compile(loss="mse", optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
     return Qnet
