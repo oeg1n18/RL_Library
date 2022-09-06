@@ -1,7 +1,7 @@
 from Networks.QNet import CreateQNetwork
 from agents.DQNAgent import DQNAgent
 from replay_buffers.UniformReplayMemory import ReplayMemory
-from drivers.value_driver import driver
+from drivers.openai_drivers import driver
 from replay_buffers.Utils import get_data_spec
 import gym
 from replay_buffers.Trajectory import Trajectory
@@ -12,7 +12,7 @@ import time
 
 env = gym.make("CartPole-v1")
 
-qnet = CreateQNetwork(env.observation_space, env.action_space, (10, 5))
+qnet = CreateQNetwork(env.observation_space, env.action_space, (10, 5), learning_rate=0.001)
 
 data_spec = get_data_spec(env)
 
@@ -37,6 +37,8 @@ for step in range(1000):
     print("Average Return: ", all_observers[0].result(), " Average Steps: ", all_observers[1].result(), " Epsilon: ",
           agent.epsilon)
 
+agent.save("saved_agents/DQN")
+
 # Evaluation
 done = False
 eval_env = gym.make("CartPole-v1")
@@ -53,3 +55,4 @@ while not done:
 
 
 agent.save("saved_agents/DQN")
+agent.load("saved_agents/DQN")

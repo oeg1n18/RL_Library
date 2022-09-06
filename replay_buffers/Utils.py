@@ -2,12 +2,9 @@ import numpy as np
 import gym
 
 
-def get_data_spec(env, priority=None):
+def get_data_spec(env, continuous=True, priority=None):
     state = env.reset()
-    if isinstance(env.action_space, gym.spaces.Discrete):
-        action = np.random.randint(env.action_space.n)
-    else:
-        "Implement method to sample non-discrete action"
+    action = env.action_space.sample()
     next_state, reward, done, _ = env.step(action)
     specs = {"state": [type(state), np.shape(state)],
              "action": [type(action), np.shape(action)],

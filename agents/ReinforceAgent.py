@@ -3,6 +3,7 @@ from copy import copy
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import os
 
 
 class Reinforce_base:
@@ -28,8 +29,9 @@ class ReinforceAgent(Reinforce_base):
     def __init__(self, policynet, learning_rate=0.05, discount_factor=0.95):
         super().__init__(discount_factor)
         self.policynet = policynet
+        self.policynet.compile(optimizer = keras.optimizers.Nadam(learning_rate=learning_rate))
         self.loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-        self.optimizer = keras.optimizers.Nadam(learning_rate=learning_rate)
+
 
     def policy(self, trajectory):
         logits = self.policynet(np.expand_dims(trajectory.state, axis=0)).numpy()
@@ -53,10 +55,12 @@ class ReinforceAgent(Reinforce_base):
             mean_grads = tf.reduce_mean([final_return * all_grads[step][var_index]
                                          for step, final_return in enumerate(all_returns)], axis=0)
             all_mean_grads.append(mean_grads)
-        self.optimizer.apply_gradients(zip(all_mean_grads, self.policynet.trainable_variables))
+        self.policynet.optimizer.apply_gradients(zip(all_mean_grads, self.policynet.trainable_variables))
 
     def save(self, dir):
-        self.policynet.save(dir)
+        path = os.path.join(dir, "policy")
+        self.policynet.save(path)
 
     def load(self, dir):
-        self.policynet = keras.models.load_model(dir)
+        path = os.path.join(dir, "policy")
+        self.policynet = keras.models.load_model(path)

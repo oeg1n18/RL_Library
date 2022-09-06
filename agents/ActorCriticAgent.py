@@ -63,20 +63,10 @@ class ActorCriticAgent(ActorCriticBase):
         self.optimizer.apply_gradients(zip(grads, self.actor_critic.trainable_variables))
 
     def save(self, dir):
-        if not os.path.isdir(dir):
-            os.mkdir(dir)
-        actor_dir = os.path.join(dir, "actor_net")
-        critic_dir = os.path.join(dir, "critic_net")
-        if not os.path.isdir(actor_dir):
-            os.mkdir(actor_dir)
-        if not os.path.isdir(critic_dir):
-            os.mkdir(critic_dir)
-        self.qnet.save(actor_dir)
-        self.critic.save(critic_dir)
+        path = os.path.join(dir, "actor_critic")
+        self.actor_critic.save(path)
 
     def load(self, dir):
-        actor_dir = os.path.join(dir, "actor_net")
-        critic_dir = os.path.join(dir, "critic_net")
-        self.qnet = keras.models.load_model(actor_dir)
-        self.critic = keras.models.load_model(critic_dir)
+        path = os.path.join(dir, "actor_critic")
+        self.actor_critic = keras.models.load_model(path)
 

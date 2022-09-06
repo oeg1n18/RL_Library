@@ -8,20 +8,24 @@ import os
 
 class DDQNAgent:
     def __init__(self, observation_space, action_space, qnet, learning_rate=0.01, df=0.99, epsilon_decay=0.005,
-                 weight_update_freq=7):
+                 tau=0.2):
         tf.keras.backend.set_floatx('float64')
+        self.tau = tau
         self.epsilon = 1.0
         self.learning_rate = learning_rate
         self.df = df
         self.epsilon_decay = epsilon_decay
         self.episode = 0
         self.qnet = qnet
+        self.qnet.compile(loss="mse", optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
         self.target_qnet = copy(qnet)
+        self.target_qnet.compile(loss="mse", optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
         self.observation_space = observation_space
         self.action_space = action_space
         self.n_train = 0
-        self.weight_update_freq = weight_update_freq
         self.check_weights_model = copy(qnet)
+
+        self.update_target_network(tau=1.0)
 
     def collect_policy(self, trajectory):
         if trajectory.done:
@@ -57,6 +61,15 @@ class DDQNAgent:
         self.qnet = keras.models.load_model(actor_dir)
         self.target_qnet = keras.models.load_model(target_dir)
 
+    def update_target_network(self, tau=None):
+        if not tau:
+            tau = self.tau
+        new_target_weights = []
+        weights = self.qnet.weights
+        for i, weight in enumerate(weights):
+            new_target_weights.append(tau*weight + self.target_qnet.weights[i]*(1-tau))
+        self.target_qnet.set_weights(new_target_weights)
+
     def train(self, experiences):
         self.n_train += 1
         states = []
@@ -83,8 +96,8 @@ class DDQNAgent:
             target_qvalues[t, actions[t]] = rewards[t] + (1 - dones[t])*self.df * next_target_qvalues[t, int(target_actions[t])]
 
         self.qnet.fit(states.astype(np.float32), target_qvalues.astype(np.float32), verbose=False)
-        if self.n_train % self.weight_update_freq == 0:
-            self.target_qnet.set_weights(self.qnet.get_weights())
+
+        self.update_target_network()
 
     def argmax(self, values, n_actions=2):
         upper_values = np.argmax(values, axis=1)

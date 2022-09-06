@@ -14,6 +14,7 @@ class DQNAgent:
         self.epsilon_decay = epsilon_decay
         self.episode = 0
         self.qnet = qnet
+        self.qnet.compile(loss="mse", optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
         self.observation_space = observation_space
         self.action_space = action_space
 

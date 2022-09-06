@@ -1,4 +1,4 @@
-from drivers.value_driver import driver
+from drivers.openai_drivers import driver
 from replay_buffers.UniformReplayMemory import ReplayMemory
 from agents.ReinforceAgent import ReinforceAgent
 from Networks.ReinforceNet import CreateReinfoceNetwork
@@ -16,7 +16,7 @@ def policy(experience):
     return np.random.randint(2)
 
 
-env = gym.make("CartPole-v1", new_step_api=True)
+env = gym.make("CartPole-v1")
 
 data_spec = get_data_spec(env)
 
@@ -31,10 +31,12 @@ replay_buffer = driver(env, policy, replay_buffer, 100)
 observers = [AverageReturnObserver()]
 
 
-for training_step in range(200):
+for training_step in range(5):
     replay_buffer.clear_experiences()
     replay_buffer, observers = driver(env, agent.policy, replay_buffer, 5, observers=observers)
     experiences = replay_buffer.sample_all_episodes()
     agent.train(experiences)
     print("Training Step: ", training_step, " Average Return: ", observers[0].result())
 
+agent.save("saved_agents/REINFORCE")
+agent.load("saved_agents/REINFORCE")
