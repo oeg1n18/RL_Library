@@ -20,6 +20,7 @@ agent = ActorCriticAgent(actor_critic, learning_rate=1e-5)
 
 observers = [AverageReturnObserver()]
 
+for training_step in range(1000):
     agent, observers = ac_driver(env, agent, 10, observers=observers)
     print("Training Step: ", training_step, " Average Return: ", observers[0].result())
 

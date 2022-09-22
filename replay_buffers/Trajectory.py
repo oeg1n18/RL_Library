@@ -18,3 +18,5 @@ class Trajectory:
                  "done": [type(self.done), np.shape(self.done)],
                  "priority": [type(self.priority), np.shape(self.priority)]}
         return specs
+
+

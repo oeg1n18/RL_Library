@@ -23,3 +23,37 @@ class ActorCriticNetwork(keras.Model):
         return action_probs, state_value
 
 
+class CriticNetwork(tf.keras.Model):
+    def __init__(self, fc1_dims, fc2_dims):
+        super(CriticNetwork, self).__init__()
+        self.fc1_dims = fc1_dims
+        self.fc2_dims = fc2_dims
+
+        self.fc1 = tf.keras.layers.Dense(fc1_dims, activation="relu")
+        self.fc2 = tf.keras.layers.Dense(fc2_dims, activation="relu")
+        self.q = tf.keras.layers.Dense(1, activation=None)
+
+    def call(self, state):
+        action_value = self.fc1(state)
+        action_value = self.fc2(action_value)
+        q = self.q(action_value)
+        return q
+
+class ActorNetwork(tf.keras.Model):
+    def __init__(self, fc1_dims, fc2_dims, n_actions):
+        super(ActorNetwork, self).__init__()
+        self.fc1_dims = fc1_dims
+        self.fc2_dims = fc2_dims
+        self.n_actions = n_actions
+
+        self.fc1 = tf.keras.layers.Dense(fc1_dims, activation="relu")
+        self.fc2 = tf.keras.layers.Dense(fc2_dims, activation="relu")
+        self.mean = tf.keras.layers.Dense(self.n_actions, activation="softmax")
+
+    def call(self, state):
+        probs = self.fc1(state)
+        probs = self.fc2(probs)
+        probs = self.mean(probs)
+        return probs
+
+
