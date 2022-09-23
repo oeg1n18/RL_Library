@@ -8,7 +8,7 @@ from observers.metrics import AverageReturnObserver
 
 env = gym.make("CartPole-v0")
 
-agent = PPOAgent(env, batch_size=5, lr=0.0003, n_epochs=4)
+agent = PPOAgent(n_actions=env.action_space.n, batch_size=5, alpha=0.0003, n_epochs=4, input_dims=env.observation_space.shape)
 
 observers = [AverageReturnObserver()]
 

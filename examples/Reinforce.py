@@ -24,14 +24,14 @@ replay_buffer = ReplayMemory(data_spec, 32, 50000)
 
 policy_network = CreateReinfoceNetwork(env.observation_space, env.action_space, (50,))
 
-agent = ReinforceAgent(policy_network)
+agent = ReinforceAgent(policy_network, learning_rate=0.01)
 
 replay_buffer = driver(env, policy, replay_buffer, 100)
 
 observers = [AverageReturnObserver()]
 
 
-for training_step in range(5):
+for training_step in range(1000):
     replay_buffer.clear_experiences()
     replay_buffer, observers = driver(env, agent.policy, replay_buffer, 5, observers=observers)
     experiences = replay_buffer.sample_all_episodes()

@@ -7,10 +7,7 @@ import warnings
 import numpy as np
 import gym
 
-
-warnings.filterwarnings("ignore")
 np.random.seed(10)
-
 
 env = gym.make("CartPole-v1")
 

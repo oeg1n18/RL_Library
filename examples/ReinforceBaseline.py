@@ -26,7 +26,7 @@ policy_network = CreateReinfoceNetwork(env.observation_space, env.action_space, 
 
 value_network = CreateBaseNetwork(env.observation_space, (30,15))
 
-agent = ReinforceBaselineAgent(policy_network, value_network)
+agent = ReinforceBaselineAgent(policy_network, value_network, learning_rate=0.005)
 
 replay_buffer = driver(env, policy, replay_buffer, 100)
 

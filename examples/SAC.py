@@ -17,7 +17,7 @@ import time
 
 env = gym.make("InvertedPendulumBulletEnv-v0")
 
-agent = SACAgent(env, n_actions=2)
+agent = SACAgent(env, n_actions=2, actor_lr=0.01, critic_lr=0.02)
 
 all_observers = [AverageReturnObserver(), AverageEpisodeLengthObserver()]
 

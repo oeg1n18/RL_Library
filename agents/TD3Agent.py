@@ -1,3 +1,4 @@
+import os
 
 import tensorflow as tf
 from tensorflow import keras
@@ -11,8 +12,8 @@ from Networks.TD3Net import ActorNetwork, CriticNetwork
 
 
 
-class Agent:
-    def __init__(self, actor_lr, critic_lr, tau, env, df=0.99,
+class Td3Agent:
+    def __init__(self, actor_lr=0.0005, critic_lr=0.001, tau=0.1, env=None, df=0.99,
                  update_actor_interval=2, warmup=1000, n_actions=2,
                  max_size=1000000, layer1_size=400, layer2_size=300,
                  batch_size=300, noise=0.1):
@@ -50,10 +51,10 @@ class Agent:
             mu = np.random.normal(scale=self.noise, size=(self.n_actions))
         else:
             state = tf.convert_to_tensor([traj.state], dtype=tf.float32)
-            mean = self.actor(state)[0]
+            mu = self.actor(state)[0]
         mean_prime = mu + np.random.normal(scale=self.noise)
 
-        mean_prime = tf.clip_by_value(mean_prime, self.min_actions, self.max_action)
+        mean_prime = tf.clip_by_value(mean_prime, self.min_action, self.max_action)
 
         self.time_step += 1
 
@@ -71,7 +72,7 @@ class Agent:
         dones = []
         for traj in experience:
             states.append(traj.state)
-            actions.append(traj.action)
+            actions.append(tf.cast(traj.action, tf.float32))
             rewards.append(traj.reward)
             next_states.append(traj.next_state)
             dones.append(traj.done)
@@ -82,9 +83,15 @@ class Agent:
         dones = tf.convert_to_tensor(dones)
         dones = tf.cast(dones, tf.float32)
 
+        self.train_step_counter += 1
+
+        if self.train_step_counter < self.batch_size:
+            return
+
         with tf.GradientTape(persistent=True) as tape:
             target_actions = self.target_actor(next_states)
             target_actions = target_actions + tf.clip_by_value(np.random.normal(scale=0.2), -0.5, 0.5)
+            target_actions = tf.clip_by_value(target_actions, self.min_action, self.max_action)
 
             q1_next = self.target_critic_1(next_states, target_actions)
             q2_next = self.target_critic_2(next_states, target_actions)
@@ -102,12 +109,15 @@ class Agent:
             critic_1_loss = keras.losses.MSE(target, q1)
             critic_2_loss = keras.losses.MSE(target, q2)
 
-        critic_1_gradient = tf.gradient(critic_1_loss, self.critic_1.trainable_variables)
-        critic_2_gradient = tf.gradient(critic_2_loss, self.critic_2.trainable_variables)
-        self.critic_1.optimizer.apply_gradients(zip(critic_1_gradient, self.critic_1.trainables_variables))
+        critic_1_gradient = tape.gradient(critic_1_loss, self.critic_1.trainable_variables)
+        critic_2_gradient = tape.gradient(critic_2_loss, self.critic_2.trainable_variables)
+        self.critic_1.optimizer.apply_gradients(zip(critic_1_gradient, self.critic_1.trainable_variables))
         self.critic_2.optimizer.apply_gradients(zip(critic_2_gradient, self.critic_2.trainable_variables))
 
-        self.train_step_counter += 1
+
+
+        if self.train_step_counter % self.update_actor_iter != 0:
+            return
 
         with tf.GradientTape() as tape:
             new_actions = self.actor(states)
@@ -139,6 +149,38 @@ class Agent:
         for i, weight in enumerate(weights):
             new_target_weights.append(tau * weight + self.target_actor.weights[i] * (1 - tau))
         self.target_actor.set_weights(new_target_weights)
+
+    def save(self, dir):
+        if not os.path.isdir(dir):
+            os.mkdir(dir)
+        actor_path = os.path.join(dir, "actor")
+        target_actor_path = os.path.join(dir, "target_actor")
+        critic_1_path = os.path.join(dir, "critic_1")
+        critic_2_path = os.path.join(dir, "ciritc_2")
+        target_critic_1_path = os.path.join(dir, "target_critic_1")
+        target_critic_2_path = os.path.join(dir, "target_critic_2")
+        self.actor.save(actor_path)
+        self.target_actor.save(target_actor_path)
+        self.critic_1.save(critic_1_path)
+        self.critic_2.save(critic_2_path)
+        self.target_critic_1.save(target_critic_1_path)
+        self.target_critic_2.save(target_critic_2_path)
+
+
+    def load(self, dir):
+        actor_path = os.path.join(dir, "actor")
+        target_actor_path = os.path.join(dir, "target_actor")
+        critic_1_path = os.path.join(dir, "critic_1")
+        critic_2_path = os.path.join(dir, "ciritc_2")
+        target_critic_1_path = os.path.join(dir, "target_critic_1")
+        target_critic_2_path = os.path.join(dir, "target_critic_2")
+
+        self.actor = tf.keras.models.load_model(actor_path)
+        self.target_actor = tf.keras.models.load_model(target_actor_path)
+        self.critic_1 = tf.keras.models.load_model(critic_1_path)
+        self.critic_2 = tf.keras.models.load_model(critic_2_path)
+        self.target_critic_1 = tf.keras.models.load_model(target_critic_1_path)
+        self.target_critic_2 = tf.keras.models.load_model(target_critic_2_path)
 
 
 
